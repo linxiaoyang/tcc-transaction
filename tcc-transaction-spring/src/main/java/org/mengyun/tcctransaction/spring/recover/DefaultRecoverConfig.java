@@ -22,7 +22,7 @@ public class DefaultRecoverConfig implements RecoverConfig {
 
     private int asyncTerminateThreadPoolSize = 1024;
 
-    private Set<Class<? extends Exception>> delayCancelExceptions = new HashSet<Class<? extends Exception>>();
+    private Set<Class<? extends Throwable>> delayCancelExceptions = new HashSet<Class<? extends Throwable>>();
 
     public DefaultRecoverConfig() {
         delayCancelExceptions.add(OptimisticLockException.class);
@@ -58,12 +58,12 @@ public class DefaultRecoverConfig implements RecoverConfig {
     }
 
     @Override
-    public void setDelayCancelExceptions(Set<Class<? extends Exception>> delayCancelExceptions) {
+    public void setDelayCancelExceptions(Set<Class<? extends Throwable>> delayCancelExceptions) {
         this.delayCancelExceptions.addAll(delayCancelExceptions);
     }
 
     @Override
-    public Set<Class<? extends Exception>> getDelayCancelExceptions() {
+    public Set<Class<? extends Throwable>> getDelayCancelExceptions() {
         return this.delayCancelExceptions;
     }
 

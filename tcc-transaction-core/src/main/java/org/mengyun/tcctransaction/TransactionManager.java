@@ -116,6 +116,21 @@ public class TransactionManager {
         }
     }
 
+    public void remove() {
+        try {
+            Transaction transaction = getCurrentTransaction();
+
+            if (transaction.getParticipants().size() == 1) {
+                transactionRepository.delete(transaction);
+            } else {
+                throw new SystemException("cannot remove transaction log when compensable transaction aready enlist other participants.");
+            }
+
+        } catch (Throwable rollbackException) {
+            logger.warn("compensable transaction remove failed, recovery job will try to rollback later.", rollbackException);
+            throw new CancellingException(rollbackException);
+        }
+    }
 
     private void commitTransaction(Transaction transaction) {
         try {

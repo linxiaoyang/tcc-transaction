@@ -13,9 +13,9 @@ public interface RecoverConfig {
 
     public String getCronExpression();
 
-    public Set<Class<? extends Exception>> getDelayCancelExceptions();
+    public Set<Class<? extends Throwable>> getDelayCancelExceptions();
 
-    public void setDelayCancelExceptions(Set<Class<? extends Exception>> delayRecoverExceptions);
+    public void setDelayCancelExceptions(Set<Class<? extends Throwable>> delayRecoverExceptions);
 
     public int getAsyncTerminateThreadPoolSize();
 }

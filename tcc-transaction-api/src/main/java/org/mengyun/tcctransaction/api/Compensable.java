@@ -19,6 +19,8 @@ public @interface Compensable {
 
     public String cancelMethod() default "";
 
+    Class<? extends Throwable>[] exclude() default {};
+
     public Class<? extends TransactionContextEditor> transactionContextEditor() default DefaultTransactionContextEditor.class;
 
     public boolean asyncConfirm() default false;
