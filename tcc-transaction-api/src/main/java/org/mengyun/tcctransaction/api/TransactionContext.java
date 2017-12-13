@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by changmingxie on 10/30/15.
+ * 事务上下文.
  */
 public class TransactionContext implements Serializable {
 
@@ -20,6 +21,11 @@ public class TransactionContext implements Serializable {
 
     }
 
+    /**
+     * 构建事务上下文对像.
+     * @param xid
+     * @param status
+     */
     public TransactionContext(TransactionXid xid, int status) {
         this.xid = xid;
         this.status = status;

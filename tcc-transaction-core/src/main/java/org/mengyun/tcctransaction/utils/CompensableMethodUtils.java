@@ -29,12 +29,16 @@ public class CompensableMethodUtils {
 
     public static MethodType calculateMethodType(Propagation propagation, boolean isTransactionActive, TransactionContext transactionContext) {
 
+        //如果事务的传播行为是REQUIRED并且事务未激活并且事务上下文为空  或者  事务的传播行为是REQUIRES_NEW ,方法就是ROOT类型
         if ((propagation.equals(Propagation.REQUIRED) && !isTransactionActive && transactionContext == null) ||
                 propagation.equals(Propagation.REQUIRES_NEW)) {
             return MethodType.ROOT;
-        } else if ((propagation.equals(Propagation.REQUIRED) || propagation.equals(Propagation.MANDATORY)) && !isTransactionActive && transactionContext != null) {
+        }
+        //事务的传播行为是REQUIRED或者是MANDATORY，并且事务未激活并且事务上下文不为空
+        else if ((propagation.equals(Propagation.REQUIRED) || propagation.equals(Propagation.MANDATORY)) && !isTransactionActive && transactionContext != null) {
             return MethodType.PROVIDER;
         } else {
+            //其他的为NORMAL
             return MethodType.NORMAL;
         }
     }

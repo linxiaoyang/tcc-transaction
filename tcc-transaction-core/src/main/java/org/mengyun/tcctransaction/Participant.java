@@ -1,5 +1,6 @@
 package org.mengyun.tcctransaction;
 
+import org.apache.log4j.Logger;
 import org.mengyun.tcctransaction.api.TransactionContext;
 import org.mengyun.tcctransaction.api.TransactionContextEditor;
 import org.mengyun.tcctransaction.api.TransactionStatus;
@@ -9,8 +10,13 @@ import java.io.Serializable;
 
 /**
  * Created by changmingxie on 10/27/15.
+ *
+ * 事务参与者.
  */
 public class Participant implements Serializable {
+
+    static final Logger LOG = Logger.getLogger(Participant.class.getSimpleName());
+
 
     private static final long serialVersionUID = 4127729421281425247L;
 
@@ -45,11 +51,19 @@ public class Participant implements Serializable {
         this.xid = xid;
     }
 
+    /**
+     * 回滚参与者事务（在Transaction中被调用）
+     */
     public void rollback() {
+        LOG.debug("==>Participant.rollback()");
         terminator.invoke(new TransactionContext(xid, TransactionStatus.CANCELLING.getId()), cancelInvocationContext, transactionContextEditorClass);
     }
 
+    /**
+     * 提交参与者事务（在Transaction中被调用）.
+     */
     public void commit() {
+        LOG.debug("==>Participant.commit()");
         terminator.invoke(new TransactionContext(xid, TransactionStatus.CONFIRMING.getId()), confirmInvocationContext, transactionContextEditorClass);
     }
 

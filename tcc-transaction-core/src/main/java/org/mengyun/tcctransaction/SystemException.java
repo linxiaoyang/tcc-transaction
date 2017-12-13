@@ -2,6 +2,8 @@ package org.mengyun.tcctransaction;
 
 /**
  * Created by changming.xie on 6/1/16.
+ *
+ * 系统异常
  */
 public class SystemException extends RuntimeException {
 

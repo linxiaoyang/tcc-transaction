@@ -21,15 +21,24 @@ public class TransactionRecovery {
 
     static final Logger logger = Logger.getLogger(TransactionRecovery.class.getSimpleName());
 
+    /**
+     * TCC事务配置器.
+     */
     private TransactionConfigurator transactionConfigurator;
 
     public void startRecover() {
 
+        // 找出所有执行错误的事务信息
         List<Transaction> transactions = loadErrorTransactions();
 
+        //恢复错误的事务.
         recoverErrorTransactions(transactions);
     }
 
+    /**
+     * 找出所有执行错误的事务信息
+     * @return
+     */
     private List<Transaction> loadErrorTransactions() {
 
 
@@ -41,6 +50,10 @@ public class TransactionRecovery {
         return transactionRepository.findAllUnmodifiedSince(new Date(currentTimeInMillis - recoverConfig.getRecoverDuration() * 1000));
     }
 
+    /**
+     * 恢复错误的事务.
+     * @param transactions
+     */
     private void recoverErrorTransactions(List<Transaction> transactions) {
 
 
@@ -91,6 +104,10 @@ public class TransactionRecovery {
         }
     }
 
+    /**
+     * 设置事务配置器.
+     * @param transactionConfigurator
+     */
     public void setTransactionConfigurator(TransactionConfigurator transactionConfigurator) {
         this.transactionConfigurator = transactionConfigurator;
     }

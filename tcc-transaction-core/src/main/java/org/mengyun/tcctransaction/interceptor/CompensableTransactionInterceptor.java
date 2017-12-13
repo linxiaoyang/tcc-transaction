@@ -41,24 +41,33 @@ public class CompensableTransactionInterceptor {
         this.delayCancelExceptions = delayCancelExceptions;
     }
 
+    /**
+     * 拦截补偿方法.
+     *
+     * @param pjp
+     * @throws Throwable
+     */
     public Object interceptCompensableMethod(ProceedingJoinPoint pjp) throws Throwable {
 
+        //找到被Compensable注解注释的方法
         Method method = CompensableMethodUtils.getCompensableMethod(pjp);
-
+        //从方法中获取到Compensable注解
         Compensable compensable = method.getAnnotation(Compensable.class);
+        //获取传播事务的传播行为
         Propagation propagation = compensable.propagation();
+        //从spring容器中获取指定transactionContextEditor类型的实例，调用实例的get方法，传入参数，获取事务上下文
         TransactionContext transactionContext = FactoryBuilder.factoryOf(compensable.transactionContextEditor()).getInstance().get(pjp.getTarget(), method, pjp.getArgs());
-
+        //是否是异步确认
         boolean asyncConfirm = compensable.asyncConfirm();
-
+        //是否是异步取消
         boolean asyncCancel = compensable.asyncCancel();
-
+        //是否事务激活
         boolean isTransactionActive = transactionManager.isTransactionActive();
-
+        //判断是否是合法的事务，不合法，抛出异常
         if (!TransactionUtils.isLegalTransactionContext(isTransactionActive, propagation, transactionContext)) {
             throw new SystemException("no active compensable transaction while propagation is mandatory for method " + method.getName());
         }
-
+        //计算方法类型
         MethodType methodType = CompensableMethodUtils.calculateMethodType(propagation, isTransactionActive, transactionContext);
 
         switch (methodType) {
@@ -71,32 +80,45 @@ public class CompensableTransactionInterceptor {
         }
     }
 
-
+    /**
+     * 主事务方法的处理.
+     * @param pjp
+     * @throws Throwable
+     */
     private Object rootMethodProceed(ProceedingJoinPoint pjp, boolean asyncConfirm, boolean asyncCancel) throws Throwable {
 
+        logger.debug("==>rootMethodProceed");
         Object returnValue = null;
 
         Transaction transaction = null;
 
         try {
-
+            // 事务开始（创建事务日志记录，并在当前线程缓存该事务日志记录）
             transaction = transactionManager.begin();
 
+
             try {
+                logger.debug("==>rootMethodProceed try begin");
+                // Try (开始执行被拦截的方法，或进入下一个拦截器处理逻辑)
                 returnValue = pjp.proceed();
+                logger.debug("==>rootMethodProceed try end");
+
             } catch (Throwable tryingException) {
 
+                //判断异常的类型是否是延迟取消的异常，如果是就同步事务的状态（update）
                 if (isDelayCancelException(tryingException)) {
                     transactionManager.syncTransaction();
                 } else {
-                    logger.warn(String.format("compensable transaction trying failed. transaction content:%s", JSON.toJSONString(transaction)), tryingException);
 
+                    logger.warn(String.format("compensable transaction trying failed. transaction content:%s", JSON.toJSONString(transaction)), tryingException);
+                     //不是指定的异常类型，就回滚
                     transactionManager.rollback(asyncCancel);
                 }
 
                 throw tryingException;
             }
 
+            //如果没有异常那么久提交
             transactionManager.commit(asyncConfirm);
 
         } finally {
@@ -106,18 +128,33 @@ public class CompensableTransactionInterceptor {
         return returnValue;
     }
 
+    /**
+     * 服务提供者事务方法处理.
+     * @param pjp
+     * @param transactionContext
+     * @throws Throwable
+     */
     private Object providerMethodProceed(ProceedingJoinPoint pjp, TransactionContext transactionContext, boolean asyncConfirm, boolean asyncCancel) throws Throwable {
+
+        logger.debug("==>providerMethodProceed transactionStatus:" + TransactionStatus.valueOf(transactionContext.getStatus()).toString());
 
         Transaction transaction = null;
         try {
 
             switch (TransactionStatus.valueOf(transactionContext.getStatus())) {
                 case TRYING:
+                    logger.debug("==>providerMethodProceed try begin");
+                    // 基于全局事务ID扩展创建新的分支事务，并存于当前线程的事务局部变量中.
                     transaction = transactionManager.propagationNewBegin(transactionContext);
+                    logger.debug("==>providerMethodProceed try end");
+                    // 开始执行被拦截的方法，或进入下一个拦截器处理逻辑
                     return pjp.proceed();
                 case CONFIRMING:
                     try {
+                        logger.debug("==>providerMethodProceed confirm begin");
+                        // 找出存在的事务并处理.
                         transaction = transactionManager.propagationExistBegin(transactionContext);
+                        // 提交
                         transactionManager.commit(asyncConfirm);
                     } catch (NoExistedTransactionException excepton) {
                         //the transaction has been commit,ignore it.
@@ -126,8 +163,12 @@ public class CompensableTransactionInterceptor {
                 case CANCELLING:
 
                     try {
+                        logger.debug("==>providerMethodProceed cancel begin");
                         transaction = transactionManager.propagationExistBegin(transactionContext);
+                        // 回滚
                         transactionManager.rollback(asyncCancel);
+                        logger.debug("==>providerMethodProceed cancel end");
+
                     } catch (NoExistedTransactionException exception) {
                         //the transaction has been rollback,ignore it.
                     }

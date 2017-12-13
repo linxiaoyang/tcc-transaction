@@ -10,10 +10,15 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 
 /**
+ * TCC Bean后置处理程序
  * Created by changmingxie on 11/20/15.
  */
 public class SpringPostProcessor implements ApplicationListener<ContextRefreshedEvent> {
 
+
+    /**
+     * Spring启动时加载.
+     */
     @Override
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
         ApplicationContext applicationContext = contextRefreshedEvent.getApplicationContext();

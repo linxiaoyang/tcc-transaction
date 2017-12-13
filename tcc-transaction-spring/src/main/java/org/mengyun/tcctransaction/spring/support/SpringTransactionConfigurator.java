@@ -12,19 +12,28 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
+ * TCC事务配置器.
  * Created by changmingxie on 11/11/15.
  */
 public class SpringTransactionConfigurator implements TransactionConfigurator {
 
     private static volatile ExecutorService executorService = null;
 
+    /**
+     * 事务库
+     */
     @Autowired
     private TransactionRepository transactionRepository;
 
+    /**
+     * 事务恢复配置
+     */
     @Autowired(required = false)
     private RecoverConfig recoverConfig = DefaultRecoverConfig.INSTANCE;
 
-
+    /**
+     * 根据事务配置器创建事务管理器.
+     */
     private TransactionManager transactionManager;
 
     public void init() {
