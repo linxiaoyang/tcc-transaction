@@ -14,8 +14,6 @@ import javax.annotation.PostConstruct;
  * Created by changmingxie on 11/20/15.
  */
 public class SpringPostProcessor implements ApplicationListener<ContextRefreshedEvent> {
-
-
     /**
      * Spring启动时加载.
      */

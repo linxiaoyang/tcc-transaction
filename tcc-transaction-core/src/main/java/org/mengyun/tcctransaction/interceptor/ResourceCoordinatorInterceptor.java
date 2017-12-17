@@ -1,5 +1,6 @@
 package org.mengyun.tcctransaction.interceptor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -22,10 +23,8 @@ import java.lang.reflect.Method;
  *
  * 资源协调拦截器
  */
+@Slf4j
 public class ResourceCoordinatorInterceptor {
-
-    static final Logger LOG = Logger.getLogger(ResourceCoordinatorInterceptor.class);
-
 
     private TransactionManager transactionManager;
 
@@ -35,7 +34,7 @@ public class ResourceCoordinatorInterceptor {
     }
 
     public Object interceptTransactionContextMethod(ProceedingJoinPoint pjp) throws Throwable {
-        LOG.debug("==>interceptTransactionContextMethod(ProceedingJoinPoint pjp)");
+        log.debug("==>interceptTransactionContextMethod(ProceedingJoinPoint pjp)");
         // 获取当前事务
         Transaction transaction = transactionManager.getCurrentTransaction();
 
@@ -63,9 +62,11 @@ public class ResourceCoordinatorInterceptor {
      * @throws InstantiationException
      */
     private void enlistParticipant(ProceedingJoinPoint pjp) throws IllegalAccessException, InstantiationException {
+        log.debug("==> enlistParticipant(ProceedingJoinPoint pjp)");
 
         //获取有Compensable注解的方法
         Method method = CompensableMethodUtils.getCompensableMethod(pjp);
+        log.debug("被拦截的方法名 method:{}", method.getName());
         if (method == null) {
             throw new RuntimeException(String.format("join point not found method, point is : %s", pjp.getSignature().getName()));
         }
